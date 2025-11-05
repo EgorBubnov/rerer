@@ -5,7 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-// Структура для представления даты
+// Структуры Date, FullName и DataRecord остаются без изменений
+
 public struct Date : IEquatable<Date>, IComparable<Date>
 {
     public int Day { get; set; }
@@ -19,25 +20,11 @@ public struct Date : IEquatable<Date>, IComparable<Date>
         Year = year;
     }
 
-    public override string ToString()
-    {
-        return $"{Year:D4}-{Month:D2}-{Day:D2}";
-    }
+    public override string ToString() => $"{Year:D4}-{Month:D2}-{Day:D2}";
 
-    public bool Equals(Date other)
-    {
-        return Day == other.Day && Month == other.Month && Year == other.Year;
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is Date other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Day, Month, Year);
-    }
+    public bool Equals(Date other) => Day == other.Day && Month == other.Month && Year == other.Year;
+    public override bool Equals(object obj) => obj is Date other && Equals(other);
+    public override int GetHashCode() => HashCode.Combine(Day, Month, Year);
 
     public int CompareTo(Date other)
     {
@@ -47,7 +34,6 @@ public struct Date : IEquatable<Date>, IComparable<Date>
     }
 }
 
-// Структура для представления ФИО
 public struct FullName : IEquatable<FullName>, IComparable<FullName>
 {
     public string LastName { get; set; }
@@ -61,39 +47,22 @@ public struct FullName : IEquatable<FullName>, IComparable<FullName>
         MiddleName = middleName;
     }
 
-    public override string ToString()
-    {
-        return $"{LastName} {FirstName} {MiddleName}";
-    }
+    public override string ToString() => $"{LastName} {FirstName} {MiddleName}";
 
-    public bool Equals(FullName other)
-    {
-        return LastName == other.LastName && FirstName == other.FirstName && MiddleName == other.MiddleName;
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is FullName other && Equals(other);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(LastName, FirstName, MiddleName);
-    }
+    public bool Equals(FullName other) => LastName == other.LastName && FirstName == other.FirstName && MiddleName == other.MiddleName;
+    public override bool Equals(object obj) => obj is FullName other && Equals(other);
+    public override int GetHashCode() => HashCode.Combine(LastName, FirstName, MiddleName);
 
     public int CompareTo(FullName other)
     {
         int lastNameComparison = string.Compare(LastName, other.LastName, StringComparison.Ordinal);
         if (lastNameComparison != 0) return -lastNameComparison;
-
         int firstNameComparison = string.Compare(FirstName, other.FirstName, StringComparison.Ordinal);
         if (firstNameComparison != 0) return -firstNameComparison;
-
         return -string.Compare(MiddleName, other.MiddleName, StringComparison.Ordinal);
     }
 }
 
-// Основной класс для хранения данных записи
 public class DataRecord : IComparable<DataRecord>
 {
     public Date Date { get; set; }
@@ -107,22 +76,15 @@ public class DataRecord : IComparable<DataRecord>
         OriginalLineNumber = lineNumber;
     }
 
-    public override string ToString()
-    {
-        return $"{Date}\t{Name}\t{OriginalLineNumber}";
-    }
+    public override string ToString() => $"{Date}\t{Name}\t{OriginalLineNumber}";
 
     public int CompareTo(DataRecord other)
     {
         int dateComparison = Date.CompareTo(other.Date);
-        if (dateComparison != 0)
-            return dateComparison;
-
-        return Name.CompareTo(other.Name);
+        return dateComparison != 0 ? dateComparison : Name.CompareTo(other.Name);
     }
 }
 
-// Главный класс программы
 public class Program
 {
     public static void Main(string[] args)
@@ -143,7 +105,6 @@ public class Program
 
             Console.WriteLine($"Прочитано {data.Length} записей");
 
-            // Создание копий для разных алгоритмов сортировки
             DataRecord[] dataForPyramidalSort = new DataRecord[data.Length];
             DataRecord[] dataForTwoWayInsertion = new DataRecord[data.Length];
             Array.Copy(data, dataForPyramidalSort, data.Length);
@@ -157,16 +118,12 @@ public class Program
             string twoWayInsertionOutput = "two_way_insertion_output.txt";
             long twoWayInsertionTime = TwoWayInsertionSortProcedure(dataForTwoWayInsertion, twoWayInsertionOutput);
 
-            // Анализ устойчивости сортировок
             if (twoWayInsertionTime != -1)
             {
                 AnalyzeStability(data, dataForPyramidalSort, dataForTwoWayInsertion);
             }
 
-            // Сравнение времени выполнения алгоритмов
             CompareSortingTimes(pyramidalSortTime, twoWayInsertionTime);
-
-            // Анализ производительности
             AnalyzeBestWorstCases(data);
         }
         catch (Exception e)
@@ -179,10 +136,9 @@ public class Program
         }
     }
 
-    // Оптимизированное чтение данных из файла
     public static DataRecord[] ReadData(string filename, int n)
     {
-        List<DataRecord> records = new List<DataRecord>(n); // Предварительное выделение памяти
+        List<DataRecord> records = new List<DataRecord>(n);
         int lineNumber = 1;
 
         try
@@ -190,7 +146,6 @@ public class Program
             using (var sr = new StreamReader(filename))
             {
                 string line;
-
                 while ((line = sr.ReadLine()) != null && records.Count < n)
                 {
                     if (string.IsNullOrWhiteSpace(line))
@@ -199,64 +154,33 @@ public class Program
                         continue;
                     }
 
-                    // Быстрый парсинг с использованием Span
-                    ReadOnlySpan<char> lineSpan = line.AsSpan();
-                    int firstTab = lineSpan.IndexOf('\t');
-
-                    if (firstTab == -1)
+                    string[] parts = line.Split('\t');
+                    if (parts.Length >= 2)
                     {
-                        lineNumber++;
-                        continue;
-                    }
-
-                    // Парсинг даты
-                    ReadOnlySpan<char> dateSpan = lineSpan.Slice(0, firstTab);
-                    int firstDash = dateSpan.IndexOf('-');
-                    int secondDash = dateSpan.Slice(firstDash + 1).IndexOf('-') + firstDash + 1;
-
-                    if (firstDash == -1 || secondDash == -1)
-                    {
-                        lineNumber++;
-                        continue;
-                    }
-
-                    // Быстрый парсинг чисел даты
-                    if (int.TryParse(dateSpan.Slice(0, firstDash), out int year) &&
-                        int.TryParse(dateSpan.Slice(firstDash + 1, secondDash - firstDash - 1), out int month) &&
-                        int.TryParse(dateSpan.Slice(secondDash + 1), out int day))
-                    {
-                        Date date = new Date(day, month, year);
-
-                        // Парсинг ФИО
-                        ReadOnlySpan<char> nameSpan = lineSpan.Slice(firstTab + 1);
-                        int firstSpace = nameSpan.IndexOf(' ');
-                        int secondSpace = nameSpan.Slice(firstSpace + 1).IndexOf(' ') + firstSpace + 1;
-
-                        if (firstSpace != -1 && secondSpace != -1)
+                        string[] dateParts = parts[0].Split('-');
+                        if (dateParts.Length >= 3 &&
+                            int.TryParse(dateParts[0], out int year) &&
+                            int.TryParse(dateParts[1], out int month) &&
+                            int.TryParse(dateParts[2], out int day))
                         {
-                            string lastName = nameSpan.Slice(0, firstSpace).ToString();
-                            string firstName = nameSpan.Slice(firstSpace + 1, secondSpace - firstSpace - 1).ToString();
-                            string middleName = nameSpan.Slice(secondSpace + 1).ToString();
+                            Date date = new Date(day, month, year);
 
-                            FullName name = new FullName(lastName, firstName, middleName);
-                            records.Add(new DataRecord(date, name, lineNumber));
+                            string[] nameParts = parts[1].Split(' ');
+                            if (nameParts.Length >= 3)
+                            {
+                                FullName name = new FullName(nameParts[0], nameParts[1], nameParts[2]);
+                                records.Add(new DataRecord(date, name, lineNumber));
+                            }
                         }
                     }
 
                     lineNumber++;
-
-                    // Более редкий вывод прогресса
                     if (records.Count % 100000 == 0)
                     {
                         Console.WriteLine($"Прочитано записей: {records.Count}");
                     }
                 }
             }
-        }
-        catch (FileNotFoundException)
-        {
-            Console.WriteLine($"Файл {filename} не существует.");
-            return new DataRecord[0];
         }
         catch (Exception e)
         {
@@ -268,30 +192,25 @@ public class Program
         return records.ToArray();
     }
 
-    // Процедура пирамидальной сортировки с замером времени
     public static long PyramidalSortProcedure(DataRecord[] data, string outputFile)
     {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-
+        Stopwatch stopwatch = Stopwatch.StartNew();
         PyramidalSort(data, data.Length);
-
         stopwatch.Stop();
         long elapsedTime = stopwatch.ElapsedMilliseconds;
 
         WriteOutput(data, outputFile, elapsedTime);
-
         return elapsedTime;
     }
 
-    // Оптимизированный алгоритм пирамидальной сортировки
+    // Исправленная пирамидальная сортировка
     public static void PyramidalSort(DataRecord[] data, int n)
     {
         // Построение max-heap
         for (int i = n / 2 - 1; i >= 0; i--)
             Heapify(data, n, i);
 
-        // Последовательное извлечение элементов из пирамиды
+        // Последовательное извлечение элементов
         for (int i = n - 1; i > 0; i--)
         {
             Swap(data, 0, i);
@@ -299,49 +218,39 @@ public class Program
         }
     }
 
-    // Неинтерактивная версия Heapify для скорости
+    // Надежная рекурсивная версия Heapify
     private static void Heapify(DataRecord[] data, int n, int i)
     {
-        DataRecord temp = data[i];
-        int current = i;
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
 
-        while (true)
+        if (left < n && data[left].CompareTo(data[largest]) > 0)
+            largest = left;
+
+        if (right < n && data[right].CompareTo(data[largest]) > 0)
+            largest = right;
+
+        if (largest != i)
         {
-            int left = 2 * current + 1;
-            int right = 2 * current + 2;
-            int largest = current;
-
-            if (left < n && data[left].CompareTo(data[largest]) > 0)
-                largest = left;
-            if (right < n && data[right].CompareTo(data[largest]) > 0)
-                largest = right;
-
-            if (largest == current) break;
-
-            data[current] = data[largest];
-            data[largest] = temp;
-            current = largest;
+            Swap(data, i, largest);
+            Heapify(data, n, largest);
         }
     }
 
-    // Оптимизированная процедура сортировки двухпутевыми вставками
     public static long TwoWayInsertionSortProcedure(DataRecord[] data, string outputFile)
     {
         if (data.Length > 50000)
         {
             Console.WriteLine($"Внимание: сортировка {data.Length} записей двухпутевыми вставками может занять значительное время");
-            Console.WriteLine("Рекомендуется использовать пирамидальную сортировку для больших объемов данных");
         }
 
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-
+        Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
             OptimizedTwoWayInsertionSort(data, data.Length);
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;
-
             WriteOutput(data, outputFile, elapsedTime);
             return elapsedTime;
         }
@@ -349,24 +258,16 @@ public class Program
         {
             stopwatch.Stop();
             Console.WriteLine($"Ошибка при сортировке двухпутевыми вставками: {ex.Message}");
-            Console.WriteLine("Сортировка двухпутевыми вставками прервана.");
             return -1;
         }
     }
 
-    // Оптимизированный алгоритм сортировки двухпутевыми вставками
     public static void OptimizedTwoWayInsertionSort(DataRecord[] data, int n)
     {
         if (n <= 1) return;
 
-        // Используем List для более эффективного управления памятью
         List<DataRecord> tempList = new List<DataRecord>(n * 2);
-
-        // Инициализируем список null значениями
-        for (int i = 0; i < n * 2; i++)
-        {
-            tempList.Add(null);
-        }
+        for (int i = 0; i < n * 2; i++) tempList.Add(null);
 
         int left = n;
         int right = n;
@@ -376,25 +277,19 @@ public class Program
         {
             DataRecord current = data[i];
 
-            // Вставка в начало
             if (current.CompareTo(tempList[left]) < 0)
             {
                 left--;
                 tempList[left] = current;
             }
-            // Вставка в конец
             else if (current.CompareTo(tempList[right]) > 0)
             {
                 right++;
                 tempList[right] = current;
             }
-            // Вставка в середину
             else
             {
-                // Бинарный поиск для нахождения позиции вставки
                 int insertPos = BinarySearchPosition(tempList, left, right, current);
-
-                // Сдвиг элементов вправо
                 for (int j = right; j >= insertPos; j--)
                 {
                     tempList[j + 1] = tempList[j];
@@ -403,21 +298,18 @@ public class Program
                 right++;
             }
 
-            // Прогресс обработки для больших массивов
             if (n > 10000 && i % 50000 == 0)
             {
-                Console.WriteLine($"Обработано записей двухпутевыми вставками: {i}/{n}");
+                Console.WriteLine($"Обработано двухпутевыми вставками: {i}/{n}");
             }
         }
 
-        // Копирование обратно в исходный массив
         for (int i = 0; i < n; i++)
         {
             data[i] = tempList[left + i];
         }
     }
 
-    // Бинарный поиск для оптимизации вставки
     private static int BinarySearchPosition(List<DataRecord> list, int left, int right, DataRecord target)
     {
         int low = left;
@@ -428,18 +320,14 @@ public class Program
             int mid = low + (high - low) / 2;
             int comparison = target.CompareTo(list[mid]);
 
-            if (comparison == 0)
-                return mid;
-            else if (comparison < 0)
-                high = mid - 1;
-            else
-                low = mid + 1;
+            if (comparison == 0) return mid;
+            else if (comparison < 0) high = mid - 1;
+            else low = mid + 1;
         }
 
         return low;
     }
 
-    // Вспомогательный метод для обмена элементов массива
     private static void Swap(DataRecord[] data, int i, int j)
     {
         DataRecord temp = data[i];
@@ -447,51 +335,40 @@ public class Program
         data[j] = temp;
     }
 
-    // Оптимизированная запись результатов
     private static void WriteOutput(DataRecord[] data, string filename, long sortingTime)
     {
         try
         {
             string outputDirectory = @"C:\Otvet";
             Directory.CreateDirectory(outputDirectory);
-
             string fullPath = Path.Combine(outputDirectory, filename);
-
-            using (var writer = new StreamWriter(fullPath, false, Encoding.UTF8, 65536)) // Буфер 64KB
+            
+            using (var writer = new StreamWriter(fullPath))
             {
-                // Буферизованная запись
                 foreach (var record in data)
                 {
-                    writer.WriteLine($"{record.Date}\t{record.Name}\t{record.OriginalLineNumber}");
+                    writer.WriteLine(record);
                 }
                 writer.WriteLine($"Время сортировки: {sortingTime} мс");
             }
-            Console.WriteLine($"Результаты сохранены в файл: {fullPath}");
+            Console.WriteLine($"Результаты сохранены в: {fullPath}");
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Ошибка при записи в файл {filename}: {e.Message}");
+            Console.WriteLine($"Ошибка записи: {e.Message}");
         }
     }
 
-    // Анализ устойчивости алгоритмов сортировки
     public static void AnalyzeStability(DataRecord[] original, DataRecord[] pyramidalSorted, DataRecord[] twoWaySorted)
     {
         Console.WriteLine("\n=== АНАЛИЗ УСТОЙЧИВОСТИ ===");
-
-        bool pyramidalSortStable = IsSortStable(original, pyramidalSorted);
-        Console.WriteLine($"Пирамидальная сортировка: {(pyramidalSortStable ? "УСТОЙЧИВА" : "НЕУСТОЙЧИВА")}");
-
+        bool pyramidalStable = IsSortStable(original, pyramidalSorted);
         bool twoWayStable = IsSortStable(original, twoWaySorted);
-        Console.WriteLine($"Двухпутевые вставки: {(twoWayStable ? "УСТОЙЧИВА" : "НЕУСТОЙЧИВА")}");
-
-        if (!pyramidalSortStable)
-        {
-            DemonstratePyramidalSortInstability();
-        }
+        
+        Console.WriteLine($"Пирамидальная: {(pyramidalStable ? "УСТОЙЧИВА" : "НЕУСТОЙЧИВА")}");
+        Console.WriteLine($"Двухпутевые: {(twoWayStable ? "УСТОЙЧИВА" : "НЕУСТОЙЧИВА")}");
     }
 
-    // Проверка устойчивости сортировки
     private static bool IsSortStable(DataRecord[] original, DataRecord[] sorted)
     {
         var groups = original
@@ -510,118 +387,65 @@ public class Program
                     r.Name.Equals(record.Record.Name) &&
                     r.OriginalLineNumber == record.Record.OriginalLineNumber);
 
-                if (sortedIndex >= 0)
-                {
-                    sortedOrder.Add(sortedIndex);
-                }
+                if (sortedIndex >= 0) sortedOrder.Add(sortedIndex);
             }
 
-            if (originalOrder.Count == sortedOrder.Count && !originalOrder.SequenceEqual(sortedOrder))
-                return false;
+            if (originalOrder.SequenceEqual(sortedOrder)) continue;
+            return false;
         }
 
         return true;
     }
 
-    // Демонстрация неустойчивости пирамидальной сортировки
-    private static void DemonstratePyramidalSortInstability()
-    {
-        Console.WriteLine("\nДемонстрация неустойчивости пирамидальной сортировки:");
-
-        Date testDate = new Date(1, 1, 2023);
-        DataRecord[] testData = new DataRecord[]
-        {
-            new DataRecord(testDate, new FullName("Иванов", "Алексей", "Петрович"), 1),
-            new DataRecord(testDate, new FullName("Петров", "Иван", "Сергеевич"), 2),
-            new DataRecord(testDate, new FullName("Иванов", "Алексей", "Петрович"), 3),
-            new DataRecord(testDate, new FullName("Сидоров", "Михаил", "Александрович"), 4)
-        };
-
-        Console.WriteLine("Исходный порядок:");
-        foreach (var record in testData)
-        {
-            Console.WriteLine($"  {record}");
-        }
-
-        DataRecord[] pyramidalSorted = new DataRecord[testData.Length];
-        Array.Copy(testData, pyramidalSorted, testData.Length);
-        PyramidalSort(pyramidalSorted, pyramidalSorted.Length);
-
-        Console.WriteLine("После пирамидальной сортировки:");
-        foreach (var record in pyramidalSorted)
-        {
-            Console.WriteLine($"  {record}");
-        }
-
-        Console.WriteLine("Заметка: записи с одинаковыми ключами (1 и 3) изменили относительный порядок!");
-    }
-
-    // Сравнение времени выполнения алгоритмов сортировки
     public static void CompareSortingTimes(long pyramidalSortTime, long twoWayInsertionTime)
     {
-        Console.WriteLine("\n=== СРАВНЕНИЕ ВРЕМЕНИ СОРТИРОВКИ ===");
-        Console.WriteLine($"Пирамидальная сортировка: {pyramidalSortTime} мс");
-
+        Console.WriteLine("\n=== СРАВНЕНИЕ ВРЕМЕНИ ===");
+        Console.WriteLine($"Пирамидальная: {pyramidalSortTime} мс");
+        
         if (twoWayInsertionTime != -1)
         {
-            Console.WriteLine($"Двухпутевые вставки: {twoWayInsertionTime} мс");
-
+            Console.WriteLine($"Двухпутевые: {twoWayInsertionTime} мс");
             if (pyramidalSortTime < twoWayInsertionTime)
-            {
-                Console.WriteLine($"Пирамидальная сортировка быстрее на {twoWayInsertionTime - pyramidalSortTime} мс");
-                Console.WriteLine($"Отношение скорости: {(double)twoWayInsertionTime / pyramidalSortTime:F2}x");
-            }
+                Console.WriteLine($"Пирамидальная быстрее на {twoWayInsertionTime - pyramidalSortTime} мс");
             else
-            {
-                Console.WriteLine($"Двухпутевые вставки быстрее на {pyramidalSortTime - twoWayInsertionTime} мс");
-                Console.WriteLine($"Отношение скорости: {(double)pyramidalSortTime / twoWayInsertionTime:F2}x");
-            }
+                Console.WriteLine($"Двухпутевые быстрее на {pyramidalSortTime - twoWayInsertionTime} мс");
         }
         else
         {
-            Console.WriteLine("Двухпутевые вставки: НЕ ЗАВЕРШЕНА");
+            Console.WriteLine("Двухпутевые: НЕ ЗАВЕРШЕНА");
         }
     }
 
-    // Анализ производительности в наилучшем и наихудшем случаях
     public static void AnalyzeBestWorstCases(DataRecord[] sampleData)
     {
-        Console.WriteLine("\n=== АНАЛИЗ НАИЛУЧШИХ/НАИХУДШИХ СЛУЧАЕВ ===");
-
-        // Ограничение размера для двухпутевых вставок
+        Console.WriteLine("\n=== АНАЛИЗ СЛУЧАЕВ ===");
         int testSize = Math.Min(sampleData.Length, 1000);
         DataRecord[] testData = new DataRecord[testSize];
         Array.Copy(sampleData, testData, testSize);
 
-        DataRecord[] bestCase = testData.OrderBy(x => x).ToArray();
-        DataRecord[] worstCase = testData.OrderByDescending(x => x).ToArray();
-
-        TestPerformanceOnCase(bestCase, "Наилучший случай (отсортированные данные)");
-        TestPerformanceOnCase(worstCase, "Наихудший случай (обратно отсортированные данные)");
+        TestPerformanceOnCase(testData.OrderBy(x => x).ToArray(), "Наилучший случай");
+        TestPerformanceOnCase(testData.OrderByDescending(x => x).ToArray(), "Наихудший случай");
         TestPerformanceOnCase(testData, "Случайные данные");
     }
 
-    // Тестирование производительности на конкретном наборе данных
     private static void TestPerformanceOnCase(DataRecord[] data, string caseName)
     {
-        DataRecord[] pyramidalSortData = new DataRecord[data.Length];
-        Array.Copy(data, pyramidalSortData, data.Length);
-
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        PyramidalSort(pyramidalSortData, pyramidalSortData.Length);
+        DataRecord[] pyramidalData = new DataRecord[data.Length];
+        Array.Copy(data, pyramidalData, data.Length);
+        
+        var stopwatch = Stopwatch.StartNew();
+        PyramidalSort(pyramidalData, pyramidalData.Length);
         stopwatch.Stop();
-        long pyramidalSortTime = stopwatch.ElapsedMilliseconds;
+        long pyramidalTime = stopwatch.ElapsedMilliseconds;
 
         DataRecord[] twoWayData = new DataRecord[data.Length];
         Array.Copy(data, twoWayData, data.Length);
-
+        
         stopwatch.Restart();
         OptimizedTwoWayInsertionSort(twoWayData, twoWayData.Length);
         stopwatch.Stop();
         long twoWayTime = stopwatch.ElapsedMilliseconds;
 
-        Console.WriteLine($"{caseName}:");
-        Console.WriteLine($"  Пирамидальная: {pyramidalSortTime} мс");
-        Console.WriteLine($"  Двухпутевые: {twoWayTime} мс");
+        Console.WriteLine($"{caseName}: Пирамидальная={pyramidalTime}мс, Двухпутевые={twoWayTime}мс");
     }
 }
